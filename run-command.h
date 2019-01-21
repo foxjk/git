@@ -1,9 +1,7 @@
 #ifndef RUN_COMMAND_H
 #define RUN_COMMAND_H
 
-#ifndef NO_PTHREADS
-#include <pthread.h>
-#endif
+#include "thread-utils.h"
 
 #include "argv-array.h"
 
@@ -43,11 +41,15 @@ struct child_process {
 	unsigned stdout_to_stderr:1;
 	unsigned use_shell:1;
 	unsigned clean_on_exit:1;
+	unsigned wait_after_clean:1;
+	void (*clean_on_exit_handler)(struct child_process *process);
+	void *clean_on_exit_handler_cbdata;
 };
 
 #define CHILD_PROCESS_INIT { NULL, ARGV_ARRAY_INIT, ARGV_ARRAY_INIT }
 void child_process_init(struct child_process *);
 void child_process_clear(struct child_process *);
+extern int is_executable(const char *name);
 
 int start_command(struct child_process *);
 int finish_command(struct child_process *);
@@ -139,7 +141,8 @@ struct async {
 int start_async(struct async *async);
 int finish_async(struct async *async);
 int in_async(void);
-void NORETURN async_exit(int code);
+int async_with_fork(void);
+void check_pipe(int err);
 
 /**
  * This callback should initialize the child process and preload the

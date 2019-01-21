@@ -578,7 +578,11 @@ test_expect_success 'excessive subject' '
 
 	rm -rf patches/ &&
 	git checkout side &&
+	before=$(git hash-object file) &&
+	before=$(git rev-parse --short $before) &&
 	for i in 5 6 1 2 3 A 4 B C 7 8 9 10 D E F; do echo "$i"; done >>file &&
+	after=$(git hash-object file) &&
+	after=$(git rev-parse --short $after) &&
 	git update-index file &&
 	git commit -m "This is an excessively long subject line for a message due to the habit some projects have of not having a short, one-line subject at the start of the commit message, but rather sticking a whole paragraph right at the start as the only thing in the commit message. It had better not become the filename for the patch." &&
 	git format-patch -o patches/ master..side &&
@@ -586,7 +590,6 @@ test_expect_success 'excessive subject' '
 '
 
 test_expect_success 'cover-letter inherits diff options' '
-
 	git mv file foo &&
 	git commit -m foo &&
 	git format-patch --no-renames --cover-letter -1 &&
@@ -616,7 +619,7 @@ test_expect_success 'shortlog of cover-letter wraps overly-long onelines' '
 '
 
 cat > expect << EOF
-index 40f36c6..2dc5c23 100644
+index $before..$after 100644
 --- a/file
 +++ b/file
 @@ -13,4 +13,20 @@ C
@@ -640,7 +643,7 @@ test_expect_success 'format-patch respects -U' '
 cat > expect << EOF
 
 diff --git a/file b/file
-index 40f36c6..2dc5c23 100644
+index $before..$after 100644
 --- a/file
 +++ b/file
 @@ -14,3 +14,19 @@ C
@@ -754,9 +757,22 @@ test_expect_success 'format-patch --ignore-if-in-upstream HEAD' '
 	git format-patch --ignore-if-in-upstream HEAD
 '
 
+git_version="$(git --version | sed "s/.* //")"
+
+signature() {
+	printf "%s\n%s\n\n" "-- " "${1:-$git_version}"
+}
+
+test_expect_success 'format-patch default signature' '
+	git format-patch --stdout -1 | tail -n 3 >output &&
+	signature >expect &&
+	test_cmp expect output
+'
+
 test_expect_success 'format-patch --signature' '
-	git format-patch --stdout --signature="my sig" -1 >output &&
-	grep "my sig" output
+	git format-patch --stdout --signature="my sig" -1 | tail -n 3 >output &&
+	signature "my sig" >expect &&
+	test_cmp expect output
 '
 
 test_expect_success 'format-patch with format.signature config' '
@@ -1073,6 +1089,15 @@ test_expect_success 'empty subject prefix does not have extra space' '
 	test_cmp expect actual
 '
 
+test_expect_success '--rfc' '
+	cat >expect <<-\EOF &&
+	Subject: [RFC PATCH 1/1] header with . in it
+	EOF
+	git format-patch -n -1 --stdout --rfc >patch &&
+	grep ^Subject: patch >actual &&
+	test_cmp expect actual
+'
+
 test_expect_success '--from=ident notices bogus ident' '
 	test_must_fail git format-patch -1 --stdout --from=foo >patch
 '
@@ -1272,8 +1297,7 @@ EOF
 4:Subject: [PATCH] subject
 8:
 10:Signed-off-by: example happens to be wrapped here.
-11:
-12:Signed-off-by: C O Mitter <committer@example.com>
+11:Signed-off-by: C O Mitter <committer@example.com>
 EOF
 	test_cmp expected actual
 '
@@ -1346,7 +1370,7 @@ EOF
 	test_cmp expected actual
 '
 
-test_expect_success 'signoff: detect garbage in non-conforming footer' '
+test_expect_success 'signoff: tolerate garbage in conforming footer' '
 	append_signoff <<\EOF >actual &&
 subject
 
@@ -1361,8 +1385,36 @@ EOF
 8:
 10:
 13:Signed-off-by: C O Mitter <committer@example.com>
-14:
-15:Signed-off-by: C O Mitter <committer@example.com>
+EOF
+	test_cmp expected actual
+'
+
+test_expect_success 'signoff: respect trailer config' '
+	append_signoff <<\EOF >actual &&
+subject
+
+Myfooter: x
+Some Trash
+EOF
+	cat >expected <<\EOF &&
+4:Subject: [PATCH] subject
+8:
+11:
+12:Signed-off-by: C O Mitter <committer@example.com>
+EOF
+	test_cmp expected actual &&
+
+	test_config trailer.Myfooter.ifexists add &&
+	append_signoff <<\EOF >actual &&
+subject
+
+Myfooter: x
+Some Trash
+EOF
+	cat >expected <<\EOF &&
+4:Subject: [PATCH] subject
+8:
+11:Signed-off-by: C O Mitter <committer@example.com>
 EOF
 	test_cmp expected actual
 '
@@ -1474,14 +1526,14 @@ test_expect_success 'cover letter auto user override' '
 test_expect_success 'format-patch --zero-commit' '
 	git format-patch --zero-commit --stdout v2..v1 >patch2 &&
 	grep "^From " patch2 | sort | uniq >actual &&
-	echo "From $_z40 Mon Sep 17 00:00:00 2001" >expect &&
+	echo "From $ZERO_OID Mon Sep 17 00:00:00 2001" >expect &&
 	test_cmp expect actual
 '
 
 test_expect_success 'From line has expected format' '
 	git format-patch --stdout v2..v1 >patch2 &&
 	grep "^From " patch2 >from &&
-	grep "^From $_x40 Mon Sep 17 00:00:00 2001$" patch2 >filtered &&
+	grep "^From $OID_REGEX Mon Sep 17 00:00:00 2001$" patch2 >filtered &&
 	test_cmp from filtered
 '
 
@@ -1502,13 +1554,15 @@ test_expect_success 'format-patch -o overrides format.outputDirectory' '
 
 test_expect_success 'format-patch --base' '
 	git checkout side &&
-	git format-patch --stdout --base=HEAD~3 -1 >patch &&
-	grep "^base-commit:" patch >actual &&
-	grep "^prerequisite-patch-id:" patch >>actual &&
-	echo "base-commit: $(git rev-parse HEAD~3)" >expected &&
+	git format-patch --stdout --base=HEAD~3 -1 | tail -n 7 >actual1 &&
+	git format-patch --stdout --base=HEAD~3 HEAD~.. | tail -n 7 >actual2 &&
+	echo >expected &&
+	echo "base-commit: $(git rev-parse HEAD~3)" >>expected &&
 	echo "prerequisite-patch-id: $(git show --patch HEAD~2 | git patch-id --stable | awk "{print \$1}")" >>expected &&
 	echo "prerequisite-patch-id: $(git show --patch HEAD~1 | git patch-id --stable | awk "{print \$1}")" >>expected &&
-	test_cmp expected actual
+	signature >> expected &&
+	test_cmp expected actual1 &&
+	test_cmp expected actual2
 '
 
 test_expect_success 'format-patch --base errors out when base commit is in revision list' '
@@ -1605,6 +1659,23 @@ test_expect_success 'format-patch --base overrides format.useAutoBase' '
 	test_cmp expected actual
 '
 
+test_expect_success 'format-patch --base with --attach' '
+	git format-patch --attach=mimemime --stdout --base=HEAD~ -1 >patch &&
+	sed -n -e "/^base-commit:/s/.*/1/p" -e "/^---*mimemime--$/s/.*/2/p" \
+		patch >actual &&
+	test_write_lines 1 2 >expect &&
+	test_cmp expect actual
+'
+test_expect_success 'format-patch --attach cover-letter only is non-multipart' '
+	test_when_finished "rm -fr patches" &&
+	git format-patch -o patches --cover-letter --attach=mimemime --base=HEAD~ -1 &&
+	! egrep "^--+mimemime" patches/0000*.patch &&
+	egrep "^--+mimemime$" patches/0001*.patch >output &&
+	test_line_count = 2 output &&
+	egrep "^--+mimemime--$" patches/0001*.patch >output &&
+	test_line_count = 1 output
+'
+
 test_expect_success 'format-patch --pretty=mboxrd' '
 	sp=" " &&
 	cat >msg <<-INPUT_END &&
@@ -1643,6 +1714,40 @@ test_expect_success 'format-patch --pretty=mboxrd' '
 	git format-patch --pretty=mboxrd --stdout -1 $C~1..$C >patch &&
 	git grep -h --no-index -A11 \
 		"^>From could trip up a loose mbox parser" patch >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'interdiff: setup' '
+	git checkout -b boop master &&
+	test_commit fnorp blorp &&
+	test_commit fleep blorp
+'
+
+test_expect_success 'interdiff: cover-letter' '
+	sed "y/q/ /" >expect <<-\EOF &&
+	+fleep
+	--q
+	EOF
+	git format-patch --cover-letter --interdiff=boop~2 -1 boop &&
+	test_i18ngrep "^Interdiff:$" 0000-cover-letter.patch &&
+	test_i18ngrep ! "^Interdiff:$" 0001-fleep.patch &&
+	sed "1,/^@@ /d; /^-- $/q" <0000-cover-letter.patch >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'interdiff: reroll-count' '
+	git format-patch --cover-letter --interdiff=boop~2 -v2 -1 boop &&
+	test_i18ngrep "^Interdiff ..* v1:$" v2-0000-cover-letter.patch
+'
+
+test_expect_success 'interdiff: solo-patch' '
+	cat >expect <<-\EOF &&
+	  +fleep
+
+	EOF
+	git format-patch --interdiff=boop~2 -1 boop &&
+	test_i18ngrep "^Interdiff:$" 0001-fleep.patch &&
+	sed "1,/^  @@ /d; /^$/q" <0001-fleep.patch >actual &&
 	test_cmp expect actual
 '
 

@@ -1,5 +1,7 @@
+#include "test-tool.h"
 #include "cache.h"
 #include "string-list.h"
+#include "utf8.h"
 
 /*
  * A "string_list_each_func_t" function that normalizes an entry from
@@ -37,6 +39,20 @@ struct test_data {
 	const char *to;    /* output: ... to this.            */
 	const char *alternative; /* output: ... or this.      */
 };
+
+/*
+ * Compatibility wrappers for OpenBSD, whose basename(3) and dirname(3)
+ * have const parameters.
+ */
+static char *posix_basename(char *path)
+{
+	return basename(path);
+}
+
+static char *posix_dirname(char *path)
+{
+	return dirname(path);
+}
 
 static int test_function(struct test_data *data, char *(*func)(char *input),
 	const char *funcname)
@@ -156,7 +172,12 @@ static struct test_data dirname_data[] = {
 	{ NULL,              NULL     }
 };
 
-int cmd_main(int argc, const char **argv)
+static int is_dotgitmodules(const char *path)
+{
+	return is_hfs_dotgitmodules(path) || is_ntfs_dotgitmodules(path);
+}
+
+int cmd__path_utils(int argc, const char **argv)
 {
 	if (argc == 3 && !strcmp(argv[1], "normalize_path_copy")) {
 		char *buf = xmallocz(strlen(argv[2]));
@@ -251,10 +272,24 @@ int cmd_main(int argc, const char **argv)
 	}
 
 	if (argc == 2 && !strcmp(argv[1], "basename"))
-		return test_function(basename_data, basename, argv[1]);
+		return test_function(basename_data, posix_basename, argv[1]);
 
 	if (argc == 2 && !strcmp(argv[1], "dirname"))
-		return test_function(dirname_data, dirname, argv[1]);
+		return test_function(dirname_data, posix_dirname, argv[1]);
+
+	if (argc > 2 && !strcmp(argv[1], "is_dotgitmodules")) {
+		int res = 0, expect = 1, i;
+		for (i = 2; i < argc; i++)
+			if (!strcmp("--not", argv[i]))
+				expect = !expect;
+			else if (expect != is_dotgitmodules(argv[i]))
+				res = error("'%s' is %s.gitmodules", argv[i],
+					    expect ? "not " : "");
+			else
+				fprintf(stderr, "ok: '%s' is %s.gitmodules\n",
+					argv[i], expect ? "" : "not ");
+		return !!res;
+	}
 
 	fprintf(stderr, "%s: unknown function name: %s\n", argv[0],
 		argv[1] ? argv[1] : "(there was none)");

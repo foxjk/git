@@ -3,6 +3,9 @@
 
 #include "notes.h"
 
+struct commit_list;
+struct object_id;
+
 /*
  * Create new notes commit from the given notes tree
  *
@@ -15,7 +18,8 @@
  * The resulting commit SHA1 is stored in result_sha1.
  */
 void create_notes_commit(struct notes_tree *t, struct commit_list *parents,
-			 const char *msg, size_t msg_len, unsigned char *result_sha1);
+			 const char *msg, size_t msg_len,
+			 struct object_id *result_oid);
 
 void commit_notes(struct notes_tree *t, const char *msg);
 
@@ -40,7 +44,7 @@ struct notes_rewrite_cfg {
 int parse_notes_merge_strategy(const char *v, enum notes_merge_strategy *s);
 struct notes_rewrite_cfg *init_copy_notes_for_rewrite(const char *cmd);
 int copy_note_for_rewrite(struct notes_rewrite_cfg *c,
-			  const unsigned char *from_obj, const unsigned char *to_obj);
+			  const struct object_id *from_obj, const struct object_id *to_obj);
 void finish_copy_notes_for_rewrite(struct notes_rewrite_cfg *c, const char *msg);
 
 #endif

@@ -156,9 +156,9 @@ test_expect_success 'git add with filemode=0, symlinks=0, and unmerged entries' 
 test_expect_success 'git add with filemode=0, symlinks=0 prefers stage 2 over stage 1' '
 	git rm --cached -f file symlink &&
 	(
-		echo "100644 $(git hash-object -w stage1) 1	file"
-		echo "100755 $(git hash-object -w stage2) 2	file"
-		echo "100644 $(printf 1 | git hash-object -w -t blob --stdin) 1	symlink"
+		echo "100644 $(git hash-object -w stage1) 1	file" &&
+		echo "100755 $(git hash-object -w stage2) 2	file" &&
+		echo "100644 $(printf 1 | git hash-object -w -t blob --stdin) 1	symlink" &&
 		echo "120000 $(printf 2 | git hash-object -w -t blob --stdin) 2	symlink"
 	) | git update-index --index-info &&
 	git config core.filemode 0 &&
@@ -187,10 +187,9 @@ test_expect_success 'git add --refresh with pathspec' '
 	echo >foo && echo >bar && echo >baz &&
 	git add foo bar baz && H=$(git rev-parse :foo) && git rm -f foo &&
 	echo "100644 $H 3	foo" | git update-index --index-info &&
-	test-chmtime -60 bar baz &&
-	>expect &&
+	test-tool chmtime -60 bar baz &&
 	git add --refresh bar >actual &&
-	test_cmp expect actual &&
+	test_must_be_empty actual &&
 
 	git diff-files --name-only >actual &&
 	! grep bar actual&&
@@ -265,7 +264,7 @@ test_expect_success 'git add to resolve conflicts on otherwise ignored path' '
 	git reset --hard &&
 	H=$(git rev-parse :1/2/a) &&
 	(
-		echo "100644 $H 1	track-this"
+		echo "100644 $H 1	track-this" &&
 		echo "100644 $H 3	track-this"
 	) | git update-index --index-info &&
 	echo track-this >>.gitignore &&
@@ -331,6 +330,10 @@ test_expect_success 'git add --dry-run --ignore-missing of non-existing file out
 	test_i18ncmp expect.err actual.err
 '
 
+test_expect_success 'git add empty string should fail' '
+	test_must_fail git add ""
+'
+
 test_expect_success 'git add --chmod=[+-]x stages correctly' '
 	rm -f foo1 &&
 	echo foo >foo1 &&
@@ -347,6 +350,56 @@ test_expect_success POSIXPERM,SYMLINKS 'git add --chmod=+x with symlinks' '
 	echo foo >foo2 &&
 	git add --chmod=+x foo2 &&
 	test_mode_in_index 100755 foo2
+'
+
+test_expect_success 'git add --chmod=[+-]x changes index with already added file' '
+	rm -f foo3 xfoo3 &&
+	git reset --hard &&
+	echo foo >foo3 &&
+	git add foo3 &&
+	git add --chmod=+x foo3 &&
+	test_mode_in_index 100755 foo3 &&
+	echo foo >xfoo3 &&
+	chmod 755 xfoo3 &&
+	git add xfoo3 &&
+	git add --chmod=-x xfoo3 &&
+	test_mode_in_index 100644 xfoo3
+'
+
+test_expect_success POSIXPERM 'git add --chmod=[+-]x does not change the working tree' '
+	echo foo >foo4 &&
+	git add foo4 &&
+	git add --chmod=+x foo4 &&
+	! test -x foo4
+'
+
+test_expect_success 'no file status change if no pathspec is given' '
+	>foo5 &&
+	>foo6 &&
+	git add foo5 foo6 &&
+	git add --chmod=+x &&
+	test_mode_in_index 100644 foo5 &&
+	test_mode_in_index 100644 foo6
+'
+
+test_expect_success 'no file status change if no pathspec is given in subdir' '
+	mkdir -p sub &&
+	(
+		cd sub &&
+		>sub-foo1 &&
+		>sub-foo2 &&
+		git add . &&
+		git add --chmod=+x &&
+		test_mode_in_index 100644 sub-foo1 &&
+		test_mode_in_index 100644 sub-foo2
+	)
+'
+
+test_expect_success 'all statuses changed in folder if . is given' '
+	git add --chmod=+x . &&
+	test $(git ls-files --stage | grep ^100644 | wc -l) -eq 0 &&
+	git add --chmod=-x . &&
+	test $(git ls-files --stage | grep ^100755 | wc -l) -eq 0
 '
 
 test_done
