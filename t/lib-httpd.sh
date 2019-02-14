@@ -82,7 +82,7 @@ case $(uname) in
 esac
 
 LIB_HTTPD_PATH=${LIB_HTTPD_PATH-"$DEFAULT_HTTPD_PATH"}
-LIB_HTTPD_PORT=${LIB_HTTPD_PORT-${this_test#t}}
+test_set_port LIB_HTTPD_PORT
 
 TEST_PATH="$TEST_DIRECTORY"/lib-httpd
 HTTPD_ROOT_PATH="$PWD"/httpd
@@ -131,7 +131,9 @@ prepare_httpd() {
 	mkdir -p "$HTTPD_DOCUMENT_ROOT_PATH"
 	cp "$TEST_PATH"/passwd "$HTTPD_ROOT_PATH"
 	install_script broken-smart-http.sh
+	install_script error-smart-http.sh
 	install_script error.sh
+	install_script apply-one-time-sed.sh
 
 	ln -s "$LIB_HTTPD_MODULE_PATH" "$HTTPD_ROOT_PATH/modules"
 
@@ -286,4 +288,25 @@ expect_askpass() {
 	} >"$TRASH_DIRECTORY/askpass-expect" &&
 	test_cmp "$TRASH_DIRECTORY/askpass-expect" \
 		 "$TRASH_DIRECTORY/askpass-query"
+}
+
+strip_access_log() {
+	sed -e "
+		s/^.* \"//
+		s/\"//
+		s/ [1-9][0-9]*\$//
+		s/^GET /GET  /
+	" "$HTTPD_ROOT_PATH"/access.log
+}
+
+# Requires one argument: the name of a file containing the expected stripped
+# access log entries.
+check_access_log() {
+	sort "$1" >"$1".sorted &&
+	strip_access_log >access.log.stripped &&
+	sort access.log.stripped >access.log.sorted &&
+	if ! test_cmp "$1".sorted access.log.sorted
+	then
+		test_cmp "$1" access.log.stripped
+	fi
 }

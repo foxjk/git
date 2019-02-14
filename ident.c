@@ -6,6 +6,7 @@
  * Copyright (C) 2005 Linus Torvalds
  */
 #include "cache.h"
+#include "config.h"
 
 static struct strbuf git_default_name = STRBUF_INIT;
 static struct strbuf git_default_email = STRBUF_INIT;
@@ -72,12 +73,10 @@ static int add_mailname_host(struct strbuf *buf)
 	FILE *mailname;
 	struct strbuf mailnamebuf = STRBUF_INIT;
 
-	mailname = fopen("/etc/mailname", "r");
-	if (!mailname) {
-		if (errno != ENOENT)
-			warning_errno("cannot open /etc/mailname");
+	mailname = fopen_or_warn("/etc/mailname", "r");
+	if (!mailname)
 		return -1;
-	}
+
 	if (strbuf_getline(&mailnamebuf, mailname) == EOF) {
 		if (ferror(mailname))
 			warning_errno("cannot read /etc/mailname");
@@ -101,7 +100,7 @@ static int canonical_name(const char *host, struct strbuf *out)
 	memset (&hints, '\0', sizeof (hints));
 	hints.ai_flags = AI_CANONNAME;
 	if (!getaddrinfo(host, NULL, &hints, &ai)) {
-		if (ai && strchr(ai->ai_canonname, '.')) {
+		if (ai && ai->ai_canonname && strchr(ai->ai_canonname, '.')) {
 			strbuf_addstr(out, ai->ai_canonname);
 			status = 0;
 		}
@@ -120,9 +119,9 @@ static int canonical_name(const char *host, struct strbuf *out)
 
 static void add_domainname(struct strbuf *out, int *is_bogus)
 {
-	char buf[1024];
+	char buf[HOST_NAME_MAX + 1];
 
-	if (gethostname(buf, sizeof(buf))) {
+	if (xgethostname(buf, sizeof(buf))) {
 		warning_errno("cannot get host name");
 		strbuf_addstr(out, "(none)");
 		*is_bogus = 1;
@@ -153,7 +152,7 @@ static void copy_email(const struct passwd *pw, struct strbuf *email,
 
 const char *ident_default_name(void)
 {
-	if (!git_default_name.len) {
+	if (!(ident_config_given & IDENT_NAME_GIVEN) && !git_default_name.len) {
 		copy_gecos(xgetpwuid_self(&default_name_is_bogus), &git_default_name);
 		strbuf_trim(&git_default_name);
 	}
@@ -162,13 +161,16 @@ const char *ident_default_name(void)
 
 const char *ident_default_email(void)
 {
-	if (!git_default_email.len) {
+	if (!(ident_config_given & IDENT_MAIL_GIVEN) && !git_default_email.len) {
 		const char *email = getenv("EMAIL");
 
 		if (email && email[0]) {
 			strbuf_addstr(&git_default_email, email);
 			committer_ident_explicitly_given |= IDENT_MAIL_GIVEN;
 			author_ident_explicitly_given |= IDENT_MAIL_GIVEN;
+		} else if ((email = query_user_email()) && email[0]) {
+			strbuf_addstr(&git_default_email, email);
+			free((char *)email);
 		} else
 			copy_email(xgetpwuid_self(&default_email_is_bogus),
 				   &git_default_email, &default_email_is_bogus);
@@ -201,6 +203,15 @@ static int crud(unsigned char c)
 		c == '"' ||
 		c == '\\' ||
 		c == '\'';
+}
+
+static int has_non_crud(const char *str)
+{
+	for (; *str; str++) {
+		if (!crud(*str))
+			return 1;
+	}
+	return 0;
 }
 
 /*
@@ -331,17 +342,17 @@ person_only:
 }
 
 static const char *env_hint =
-"\n"
-"*** Please tell me who you are.\n"
-"\n"
-"Run\n"
-"\n"
-"  git config --global user.email \"you@example.com\"\n"
-"  git config --global user.name \"Your Name\"\n"
-"\n"
-"to set your account\'s default identity.\n"
-"Omit --global to set the identity only in this repository.\n"
-"\n";
+N_("\n"
+   "*** Please tell me who you are.\n"
+   "\n"
+   "Run\n"
+   "\n"
+   "  git config --global user.email \"you@example.com\"\n"
+   "  git config --global user.name \"Your Name\"\n"
+   "\n"
+   "to set your account\'s default identity.\n"
+   "Omit --global to set the identity only in this repository.\n"
+   "\n");
 
 const char *fmt_ident(const char *name, const char *email,
 		      const char *date_str, int flag)
@@ -351,44 +362,46 @@ const char *fmt_ident(const char *name, const char *email,
 	int want_date = !(flag & IDENT_NO_DATE);
 	int want_name = !(flag & IDENT_NO_NAME);
 
+	if (!email) {
+		if (strict && ident_use_config_only
+		    && !(ident_config_given & IDENT_MAIL_GIVEN)) {
+			fputs(_(env_hint), stderr);
+			die(_("no email was given and auto-detection is disabled"));
+		}
+		email = ident_default_email();
+		if (strict && default_email_is_bogus) {
+			fputs(_(env_hint), stderr);
+			die(_("unable to auto-detect email address (got '%s')"), email);
+		}
+	}
+
 	if (want_name) {
 		int using_default = 0;
 		if (!name) {
 			if (strict && ident_use_config_only
 			    && !(ident_config_given & IDENT_NAME_GIVEN)) {
-				fputs(env_hint, stderr);
-				die("no name was given and auto-detection is disabled");
+				fputs(_(env_hint), stderr);
+				die(_("no name was given and auto-detection is disabled"));
 			}
 			name = ident_default_name();
 			using_default = 1;
 			if (strict && default_name_is_bogus) {
-				fputs(env_hint, stderr);
-				die("unable to auto-detect name (got '%s')", name);
+				fputs(_(env_hint), stderr);
+				die(_("unable to auto-detect name (got '%s')"), name);
 			}
 		}
 		if (!*name) {
 			struct passwd *pw;
 			if (strict) {
 				if (using_default)
-					fputs(env_hint, stderr);
-				die("empty ident name (for <%s>) not allowed", email);
+					fputs(_(env_hint), stderr);
+				die(_("empty ident name (for <%s>) not allowed"), email);
 			}
 			pw = xgetpwuid_self(NULL);
 			name = pw->pw_name;
 		}
-	}
-
-	if (!email) {
-		if (strict && ident_use_config_only
-		    && !(ident_config_given & IDENT_MAIL_GIVEN)) {
-			fputs(env_hint, stderr);
-			die("no email was given and auto-detection is disabled");
-		}
-		email = ident_default_email();
-		if (strict && default_email_is_bogus) {
-			fputs(env_hint, stderr);
-			die("unable to auto-detect email address (got '%s')", email);
-		}
+		if (strict && !has_non_crud(name))
+			die(_("name consists only of disallowed characters: %s"), name);
 	}
 
 	strbuf_reset(&ident);
@@ -403,7 +416,7 @@ const char *fmt_ident(const char *name, const char *email,
 		strbuf_addch(&ident, ' ');
 		if (date_str && date_str[0]) {
 			if (parse_date(date_str, &ident) < 0)
-				die("invalid date format: %s", date_str);
+				die(_("invalid date format: %s"), date_str);
 		}
 		else
 			strbuf_addstr(&ident, ident_default_date());

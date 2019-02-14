@@ -212,18 +212,22 @@ EOF
 
 test_expect_success 'blame -L with invalid start' '
 	test_must_fail git blame -L5 tres 2>errors &&
-	grep "has only 2 lines" errors
+	test_i18ngrep "has only 2 lines" errors
 '
 
 test_expect_success 'blame -L with invalid end' '
-	test_must_fail git blame -L1,5 tres 2>errors &&
-	grep "has only 2 lines" errors
+	git blame -L1,5 tres >out &&
+	test_line_count = 2 out
 '
 
 test_expect_success 'blame parses <end> part of -L' '
 	git blame -L1,1 tres >out &&
-	cat out &&
-	test $(wc -l < out) -eq 1
+	test_line_count = 1 out
+'
+
+test_expect_success 'blame -Ln,-(n+1)' '
+	git blame -L3,-4 nine_lines >out &&
+	test_line_count = 3 out
 '
 
 test_expect_success 'indent of line numbers, nine lines' '

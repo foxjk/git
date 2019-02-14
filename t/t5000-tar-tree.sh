@@ -101,7 +101,7 @@ test_expect_success \
      ten=0123456789 && hundred=$ten$ten$ten$ten$ten$ten$ten$ten$ten$ten &&
      echo long filename >a/four$hundred &&
      mkdir a/bin &&
-     test-genrandom "frotz" 500000 >a/bin/sh &&
+     test-tool genrandom "frotz" 500000 >a/bin/sh &&
      printf "A\$Format:%s\$O" "$SUBSTFORMAT" >a/substfile1 &&
      printf "A not substituted O" >a/substfile2 &&
      if test_have_prereq SYMLINKS; then
@@ -179,11 +179,20 @@ test_expect_success 'git archive --remote' \
     'git archive --remote=. HEAD >b5.tar &&
     test_cmp_bin b.tar b5.tar'
 
+test_expect_success 'git archive --remote with configured remote' '
+	git config remote.foo.url . &&
+	(
+		cd a &&
+		git archive --remote=foo --output=../b5-nick.tar HEAD
+	) &&
+	test_cmp_bin b.tar b5-nick.tar
+'
+
 test_expect_success \
     'validate file modification time' \
     'mkdir extract &&
      "$TAR" xf b.tar -C extract a/a &&
-     test-chmtime -v +0 extract/a/a |cut -f 1 >b.mtime &&
+     test-tool chmtime --get extract/a/a >b.mtime &&
      echo "1117231200" >expected.mtime &&
      test_cmp expected.mtime b.mtime'
 
@@ -197,9 +206,21 @@ test_expect_success 'git archive with --output, override inferred format' '
 	test_cmp_bin b.tar d4.zip
 '
 
-test_expect_success \
-    'git archive --list outside of a git repo' \
-    'GIT_DIR=some/non-existing/directory git archive --list'
+test_expect_success GZIP 'git archive with --output and --remote creates .tgz' '
+	git archive --output=d5.tgz --remote=. HEAD &&
+	gzip -d -c <d5.tgz >d5.tar &&
+	test_cmp_bin b.tar d5.tar
+'
+
+test_expect_success 'git archive --list outside of a git repo' '
+	nongit git archive --list
+'
+
+test_expect_success 'git archive --remote outside of a git repo' '
+	git archive HEAD >expect.tar &&
+	nongit git archive --remote="$PWD" HEAD >actual.tar &&
+	test_cmp_bin expect.tar actual.tar
+'
 
 test_expect_success 'clients cannot access unreachable commits' '
 	test_commit unreachable &&
@@ -375,7 +396,7 @@ test_expect_success TAR_HUGE,LONG_IS_64BIT 'system tar can read our huge size' '
 	test_cmp expect actual
 '
 
-test_expect_success LONG_IS_64BIT 'set up repository with far-future commit' '
+test_expect_success TIME_IS_64BIT 'set up repository with far-future commit' '
 	rm -f .git/index &&
 	echo content >file &&
 	git add file &&
@@ -383,11 +404,11 @@ test_expect_success LONG_IS_64BIT 'set up repository with far-future commit' '
 		git commit -m "tempori parendum"
 '
 
-test_expect_success LONG_IS_64BIT 'generate tar with future mtime' '
+test_expect_success TIME_IS_64BIT 'generate tar with future mtime' '
 	git archive HEAD >future.tar
 '
 
-test_expect_success TAR_HUGE,LONG_IS_64BIT 'system tar can read our future mtime' '
+test_expect_success TAR_HUGE,TIME_IS_64BIT,TIME_T_IS_64BIT 'system tar can read our future mtime' '
 	echo 4147 >expect &&
 	tar_info future.tar | cut -d" " -f2 >actual &&
 	test_cmp expect actual

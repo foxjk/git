@@ -407,7 +407,7 @@ test_expect_success 'good merge base when good and bad are siblings' '
 	test_i18ngrep "merge base must be tested" my_bisect_log.txt &&
 	grep $HASH4 my_bisect_log.txt &&
 	git bisect good > my_bisect_log.txt &&
-	test_must_fail grep "merge base must be tested" my_bisect_log.txt &&
+	! grep "merge base must be tested" my_bisect_log.txt &&
 	grep $HASH6 my_bisect_log.txt &&
 	git bisect reset
 '
@@ -802,7 +802,7 @@ test_expect_success 'bisect terms needs 0 or 1 argument' '
 	test_must_fail git bisect terms only-one &&
 	test_must_fail git bisect terms 1 2 &&
 	test_must_fail git bisect terms 2>actual &&
-	echo "no terms defined" >expected &&
+	echo "error: no terms defined" >expected &&
 	test_i18ncmp expected actual
 '
 
@@ -892,6 +892,23 @@ test_expect_success 'bisect start takes options and revs in any order' '
 	(git bisect terms --term-bad && git bisect terms --term-good) >actual &&
 	printf "%s\n%s\n" bad-term three >expected &&
 	test_cmp expected actual
+'
+
+test_expect_success 'git bisect reset cleans bisection state properly' '
+	git bisect reset &&
+	git bisect start &&
+	git bisect good $HASH1 &&
+	git bisect bad $HASH4 &&
+	git bisect reset &&
+	test -z "$(git for-each-ref "refs/bisect/*")" &&
+	test_path_is_missing "$GIT_DIR/BISECT_EXPECTED_REV" &&
+	test_path_is_missing "$GIT_DIR/BISECT_ANCESTORS_OK" &&
+	test_path_is_missing "$GIT_DIR/BISECT_LOG" &&
+	test_path_is_missing "$GIT_DIR/BISECT_RUN" &&
+	test_path_is_missing "$GIT_DIR/BISECT_TERMS" &&
+	test_path_is_missing "$GIT_DIR/head-name" &&
+	test_path_is_missing "$GIT_DIR/BISECT_HEAD" &&
+	test_path_is_missing "$GIT_DIR/BISECT_START"
 '
 
 test_done

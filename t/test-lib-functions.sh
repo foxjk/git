@@ -42,6 +42,9 @@ test_decode_color () {
 		function name(n) {
 			if (n == 0) return "RESET";
 			if (n == 1) return "BOLD";
+			if (n == 2) return "FAINT";
+			if (n == 3) return "ITALIC";
+			if (n == 7) return "REVERSE";
 			if (n == 30) return "BLACK";
 			if (n == 31) return "RED";
 			if (n == 32) return "GREEN";
@@ -81,6 +84,10 @@ test_decode_color () {
 	'
 }
 
+lf_to_nul () {
+	perl -pe 'y/\012/\000/'
+}
+
 nul_to_q () {
 	perl -pe 'y/\000/Q/'
 }
@@ -109,6 +116,19 @@ remove_cr () {
 	tr '\015' Q | sed -e 's/Q$//'
 }
 
+# Generate an output of $1 bytes of all zeroes (NULs, not ASCII zeroes).
+# If $1 is 'infinity', output forever or until the receiving pipe stops reading,
+# whichever comes first.
+generate_zero_bytes () {
+	perl -e 'if ($ARGV[0] == "infinity") {
+		while (-1) {
+			print "\0"
+		}
+	} else {
+		print "\0" x $ARGV[0]
+	}' "$@"
+}
+
 # In some bourne shell implementations, the "unset" builtin returns
 # nonzero status when a variable to be unset was not set in the first
 # place.
@@ -132,37 +152,53 @@ test_tick () {
 	export GIT_COMMITTER_DATE GIT_AUTHOR_DATE
 }
 
-# Stop execution and start a shell. This is useful for debugging tests and
-# only makes sense together with "-v".
+# Stop execution and start a shell. This is useful for debugging tests.
 #
 # Be sure to remove all invocations of this command before submitting.
 
 test_pause () {
-	if test "$verbose" = t; then
-		"$SHELL_PATH" <&6 >&3 2>&4
-	else
-		error >&5 "test_pause requires --verbose"
-	fi
+	"$SHELL_PATH" <&6 >&5 2>&7
 }
 
-# Wrap git in gdb. Adding this to a command can make it easier to
-# understand what is going on in a failing test.
+# Wrap git with a debugger. Adding this to a command can make it easier
+# to understand what is going on in a failing test.
 #
-# Example: "debug git checkout master".
+# Examples:
+#     debug git checkout master
+#     debug --debugger=nemiver git $ARGS
+#     debug -d "valgrind --tool=memcheck --track-origins=yes" git $ARGS
 debug () {
-	 GIT_TEST_GDB=1 "$@"
+	case "$1" in
+	-d)
+		GIT_DEBUGGER="$2" &&
+		shift 2
+		;;
+	--debugger=*)
+		GIT_DEBUGGER="${1#*=}" &&
+		shift 1
+		;;
+	*)
+		GIT_DEBUGGER=1
+		;;
+	esac &&
+	GIT_DEBUGGER="${GIT_DEBUGGER}" "$@" <&6 >&5 2>&7
 }
 
-# Call test_commit with the arguments "<message> [<file> [<contents> [<tag>]]]"
+# Call test_commit with the arguments
+# [-C <directory>] <message> [<file> [<contents> [<tag>]]]"
 #
 # This will commit a file with the given contents and the given commit
 # message, and tag the resulting commit with the given tag name.
 #
 # <file>, <contents>, and <tag> all default to <message>.
+#
+# If the first argument is "-C", the second argument is used as a path for
+# the git invocations.
 
 test_commit () {
 	notick= &&
 	signoff= &&
+	indir= &&
 	while test $# != 0
 	do
 		case "$1" in
@@ -172,21 +208,26 @@ test_commit () {
 		--signoff)
 			signoff="$1"
 			;;
+		-C)
+			indir="$2"
+			shift
+			;;
 		*)
 			break
 			;;
 		esac
 		shift
 	done &&
+	indir=${indir:+"$indir"/} &&
 	file=${2:-"$1.t"} &&
-	echo "${3-$1}" > "$file" &&
-	git add "$file" &&
+	echo "${3-$1}" > "$indir$file" &&
+	git ${indir:+ -C "$indir"} add "$file" &&
 	if test -z "$notick"
 	then
 		test_tick
 	fi &&
-	git commit $signoff -m "$1" &&
-	git tag "${4:-$1}"
+	git ${indir:+ -C "$indir"} commit $signoff -m "$1" &&
+	git ${indir:+ -C "$indir"} tag "${4:-$1}"
 }
 
 # Call test_merge with the arguments "<message> <commit>", where <commit>
@@ -205,6 +246,11 @@ test_merge () {
 test_chmod () {
 	chmod "$@" &&
 	git update-index --add "--chmod=$@"
+}
+
+# Get the modebits from a file.
+test_modebits () {
+	ls -l "$1" | sed -e 's|^\(..........\).*|\1|'
 }
 
 # Unset a configuration variable, but don't fail if it doesn't exist.
@@ -263,8 +309,20 @@ write_script () {
 # The single parameter is the prerequisite tag (a simple word, in all
 # capital letters by convention).
 
+test_unset_prereq () {
+	! test_have_prereq "$1" ||
+	satisfied_prereq="${satisfied_prereq% $1 *} ${satisfied_prereq#* $1 }"
+}
+
 test_set_prereq () {
-	satisfied_prereq="$satisfied_prereq$1 "
+	case "$1" in
+	!*)
+		test_unset_prereq "${1#!}"
+		;;
+	*)
+		satisfied_prereq="$satisfied_prereq$1 "
+		;;
+	esac
 }
 satisfied_prereq=" "
 lazily_testable_prereq= lazily_tested_prereq=
@@ -373,14 +431,14 @@ test_declared_prereq () {
 test_verify_prereq () {
 	test -z "$test_prereq" ||
 	expr >/dev/null "$test_prereq" : '[A-Z0-9_,!]*$' ||
-	error "bug in the test script: '$test_prereq' does not look like a prereq"
+	BUG "'$test_prereq' does not look like a prereq"
 }
 
 test_expect_failure () {
 	test_start_
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-failure"
+	BUG "not 2 or 3 parameters to test-expect-failure"
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -400,7 +458,7 @@ test_expect_success () {
 	test_start_
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
+	BUG "not 2 or 3 parameters to test-expect-success"
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -427,7 +485,7 @@ test_expect_success () {
 test_external () {
 	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 3 ||
-	error >&5 "bug in the test script: not 3 or 4 parameters to test_external"
+	BUG "not 3 or 4 parameters to test_external"
 	descr="$1"
 	shift
 	test_verify_prereq
@@ -522,6 +580,14 @@ test_path_is_dir () {
 	fi
 }
 
+test_path_exists () {
+	if ! test -e "$1"
+	then
+		echo "Path $1 doesn't exist. $2"
+		false
+	fi
+}
+
 # Check if the directory exists and is empty as expected, barf otherwise.
 test_dir_is_empty () {
 	test_path_is_dir "$1" &&
@@ -560,7 +626,7 @@ test_path_is_missing () {
 test_line_count () {
 	if test $# != 3
 	then
-		error "bug in the test script: not 3 parameters to test_line_count"
+		BUG "not 3 parameters to test_line_count"
 	elif ! test $(wc -l <"$3") "$1" "$2"
 	then
 		echo "test_line_count: line count for $3 !$1 $2"
@@ -595,6 +661,14 @@ list_contains () {
 #
 # Writing this as "! git checkout ../outerspace" is wrong, because
 # the failure could be due to a segv.  We want a controlled failure.
+#
+# Accepts the following options:
+#
+#   ok=<signal-name>[,<...>]:
+#     Don't treat an exit caused by the given signal as error.
+#     Multiple signals can be specified as a comma separated list.
+#     Currently recognized signal names are: sigpipe, success.
+#     (Don't use 'success', use 'test_might_fail' instead.)
 
 test_must_fail () {
 	case "$1" in
@@ -606,30 +680,30 @@ test_must_fail () {
 		_test_ok=
 		;;
 	esac
-	"$@"
+	"$@" 2>&7
 	exit_code=$?
 	if test $exit_code -eq 0 && ! list_contains "$_test_ok" success
 	then
-		echo >&2 "test_must_fail: command succeeded: $*"
+		echo >&4 "test_must_fail: command succeeded: $*"
 		return 1
 	elif test_match_signal 13 $exit_code && list_contains "$_test_ok" sigpipe
 	then
 		return 0
 	elif test $exit_code -gt 129 && test $exit_code -le 192
 	then
-		echo >&2 "test_must_fail: died by signal $(($exit_code - 128)): $*"
+		echo >&4 "test_must_fail: died by signal $(($exit_code - 128)): $*"
 		return 1
 	elif test $exit_code -eq 127
 	then
-		echo >&2 "test_must_fail: command not found: $*"
+		echo >&4 "test_must_fail: command not found: $*"
 		return 1
 	elif test $exit_code -eq 126
 	then
-		echo >&2 "test_must_fail: valgrind error: $*"
+		echo >&4 "test_must_fail: valgrind error: $*"
 		return 1
 	fi
 	return 0
-}
+} 7>&2 2>&4
 
 # Similar to test_must_fail, but tolerates success, too.  This is
 # meant to be used in contexts like:
@@ -641,10 +715,12 @@ test_must_fail () {
 #
 # Writing "git config --unset all.configuration || :" would be wrong,
 # because we want to notice if it fails due to segv.
+#
+# Accepts the same options as test_must_fail.
 
 test_might_fail () {
-	test_must_fail ok=success "$@"
-}
+	test_must_fail ok=success "$@" 2>&7
+} 7>&2 2>&4
 
 # Similar to test_must_fail and test_might_fail, but check that a
 # given command exited with a given exit code. Meant to be used as:
@@ -656,16 +732,16 @@ test_might_fail () {
 test_expect_code () {
 	want_code=$1
 	shift
-	"$@"
+	"$@" 2>&7
 	exit_code=$?
 	if test $exit_code = $want_code
 	then
 		return 0
 	fi
 
-	echo >&2 "test_expect_code: command exited with $exit_code, we wanted $want_code $*"
+	echo >&4 "test_expect_code: command exited with $exit_code, we wanted $want_code $*"
 	return 1
-}
+} 7>&2 2>&4
 
 # test_cmp is a helper function to compare actual and expected output.
 # You can use it like:
@@ -684,10 +760,86 @@ test_cmp() {
 	$GIT_TEST_CMP "$@"
 }
 
+# Check that the given config key has the expected value.
+#
+#    test_cmp_config [-C <dir>] <expected-value>
+#                    [<git-config-options>...] <config-key>
+#
+# for example to check that the value of core.bar is foo
+#
+#    test_cmp_config foo core.bar
+#
+test_cmp_config() {
+	local GD &&
+	if test "$1" = "-C"
+	then
+		shift &&
+		GD="-C $1" &&
+		shift
+	fi &&
+	printf "%s\n" "$1" >expect.config &&
+	shift &&
+	git $GD config "$@" >actual.config &&
+	test_cmp expect.config actual.config
+}
+
 # test_cmp_bin - helper to compare binary files
 
 test_cmp_bin() {
 	cmp "$@"
+}
+
+# Use this instead of test_cmp to compare files that contain expected and
+# actual output from git commands that can be translated.  When running
+# under GIT_TEST_GETTEXT_POISON this pretends that the command produced expected
+# results.
+test_i18ncmp () {
+	! test_have_prereq C_LOCALE_OUTPUT || test_cmp "$@"
+}
+
+# Use this instead of "grep expected-string actual" to see if the
+# output from a git command that can be translated either contains an
+# expected string, or does not contain an unwanted one.  When running
+# under GIT_TEST_GETTEXT_POISON this pretends that the command produced expected
+# results.
+test_i18ngrep () {
+	eval "last_arg=\${$#}"
+
+	test -f "$last_arg" ||
+	BUG "test_i18ngrep requires a file to read as the last parameter"
+
+	if test $# -lt 2 ||
+	   { test "x!" = "x$1" && test $# -lt 3 ; }
+	then
+		BUG "too few parameters to test_i18ngrep"
+	fi
+
+	if test_have_prereq !C_LOCALE_OUTPUT
+	then
+		# pretend success
+		return 0
+	fi
+
+	if test "x!" = "x$1"
+	then
+		shift
+		! grep "$@" && return 0
+
+		echo >&4 "error: '! grep $@' did find a match in:"
+	else
+		grep "$@" && return 0
+
+		echo >&4 "error: 'grep $@' didn't find a match in:"
+	fi
+
+	if test -s "$last_arg"
+	then
+		cat >&4 "$last_arg"
+	else
+		echo >&4 "<File '$last_arg' is empty>"
+	fi
+
+	return 1
 }
 
 # Call any command "$@" but be more verbose about its
@@ -695,7 +847,7 @@ test_cmp_bin() {
 # not output anything when they fail.
 verbose () {
 	"$@" && return 0
-	echo >&2 "command failed: $(git rev-parse --sq-quote "$@")"
+	echo >&4 "command failed: $(git rev-parse --sq-quote "$@")"
 	return 1
 }
 
@@ -703,6 +855,7 @@ verbose () {
 # otherwise.
 
 test_must_be_empty () {
+	test_path_is_file "$1" &&
 	if test -s "$1"
 	then
 		echo "'$1' is not empty, it contains:"
@@ -713,9 +866,23 @@ test_must_be_empty () {
 
 # Tests that its two parameters refer to the same revision
 test_cmp_rev () {
-	git rev-parse --verify "$1" >expect.rev &&
-	git rev-parse --verify "$2" >actual.rev &&
-	test_cmp expect.rev actual.rev
+	if test $# != 2
+	then
+		error "bug in the test script: test_cmp_rev requires two revisions, but got $#"
+	else
+		local r1 r2
+		r1=$(git rev-parse --verify "$1") &&
+		r2=$(git rev-parse --verify "$2") &&
+		if test "$r1" != "$r2"
+		then
+			cat >&4 <<-EOF
+			error: two revisions point to different objects:
+			  '$1': $r1
+			  '$2': $r2
+			EOF
+			return 1
+		fi
+	fi
 }
 
 # Print a sequence of integers in increasing order, either with
@@ -730,7 +897,7 @@ test_seq () {
 	case $# in
 	1)	set 1 "$@" ;;
 	2)	;;
-	*)	error "bug in the test script: not 1 or 2 parameters to test_seq" ;;
+	*)	BUG "not 1 or 2 parameters to test_seq" ;;
 	esac
 	test_seq_counter__=$1
 	while test "$test_seq_counter__" -le "$2"
@@ -768,7 +935,7 @@ test_when_finished () {
 	# doing so on Bash is better than nothing (the test will
 	# silently pass on other shells).
 	test "${BASH_SUBSHELL-0}" = 0 ||
-	error "bug in test script: test_when_finished does nothing in a subshell"
+	BUG "test_when_finished does nothing in a subshell"
 	test_cleanup="{ $*
 		} && (exit \"\$eval_ret\"); eval_ret=\$?; $test_cleanup"
 }
@@ -777,12 +944,13 @@ test_when_finished () {
 # Usage: test_create_repo <directory>
 test_create_repo () {
 	test "$#" = 1 ||
-	error "bug in the test script: not 1 parameter to test-create-repo"
+	BUG "not 1 parameter to test-create-repo"
 	repo="$1"
 	mkdir -p "$repo"
 	(
 		cd "$repo" || error "Cannot setup test environment"
-		"$GIT_EXEC_PATH/git-init" "--template=$GIT_BUILD_DIR/templates/blt/" >&3 2>&4 ||
+		"${GIT_TEST_INSTALLED:-$GIT_EXEC_PATH}/git$X" init \
+			"--template=$GIT_BUILD_DIR/templates/blt/" >&3 2>&4 ||
 		error "cannot run git init -- have you built things yet?"
 		mv .git/hooks .git/hooks-disabled
 	) || exit
@@ -813,8 +981,8 @@ test_write_lines () {
 }
 
 perl () {
-	command "$PERL_PATH" "$@"
-}
+	command "$PERL_PATH" "$@" 2>&7
+} 7>&2 2>&4
 
 # Is the value one of the various ways to spell a boolean true/false?
 test_normalize_bool () {
@@ -954,13 +1122,13 @@ test_env () {
 				shift
 				;;
 			*)
-				"$@"
+				"$@" 2>&7
 				exit
 				;;
 			esac
 		done
 	)
-}
+} 7>&2 2>&4
 
 # Returns true if the numeric exit code in "$2" represents the expected signal
 # in "$1". Signals should be given numerically.
@@ -985,8 +1153,165 @@ test_copy_bytes () {
 			my $s;
 			my $nread = sysread(STDIN, $s, $len);
 			die "cannot read: $!" unless defined($nread);
+			last unless $nread;
 			print $s;
 			$len -= $nread;
 		}
 	' - "$1"
+}
+
+# run "$@" inside a non-git directory
+nongit () {
+	test -d non-repo ||
+	mkdir non-repo ||
+	return 1
+
+	(
+		GIT_CEILING_DIRECTORIES=$(pwd) &&
+		export GIT_CEILING_DIRECTORIES &&
+		cd non-repo &&
+		"$@" 2>&7
+	)
+} 7>&2 2>&4
+
+# convert stdin to pktline representation; note that empty input becomes an
+# empty packet, not a flush packet (for that you can just print 0000 yourself).
+packetize() {
+	cat >packetize.tmp &&
+	len=$(wc -c <packetize.tmp) &&
+	printf '%04x%s' "$(($len + 4))" &&
+	cat packetize.tmp &&
+	rm -f packetize.tmp
+}
+
+# Parse the input as a series of pktlines, writing the result to stdout.
+# Sideband markers are removed automatically, and the output is routed to
+# stderr if appropriate.
+#
+# NUL bytes are converted to "\\0" for ease of parsing with text tools.
+depacketize () {
+	perl -e '
+		while (read(STDIN, $len, 4) == 4) {
+			if ($len eq "0000") {
+				print "FLUSH\n";
+			} else {
+				read(STDIN, $buf, hex($len) - 4);
+				$buf =~ s/\0/\\0/g;
+				if ($buf =~ s/^[\x2\x3]//) {
+					print STDERR $buf;
+				} else {
+					$buf =~ s/^\x1//;
+					print $buf;
+				}
+			}
+		}
+	'
+}
+
+# Set the hash algorithm in use to $1.  Only useful when testing the testsuite.
+test_set_hash () {
+	test_hash_algo="$1"
+}
+
+# Detect the hash algorithm in use.
+test_detect_hash () {
+	# Currently we only support SHA-1, but in the future this function will
+	# actually detect the algorithm in use.
+	test_hash_algo='sha1'
+}
+
+# Load common hash metadata and common placeholder object IDs for use with
+# test_oid.
+test_oid_init () {
+	test -n "$test_hash_algo" || test_detect_hash &&
+	test_oid_cache <"$TEST_DIRECTORY/oid-info/hash-info" &&
+	test_oid_cache <"$TEST_DIRECTORY/oid-info/oid"
+}
+
+# Load key-value pairs from stdin suitable for use with test_oid.  Blank lines
+# and lines starting with "#" are ignored.  Keys must be shell identifier
+# characters.
+#
+# Examples:
+# rawsz sha1:20
+# rawsz sha256:32
+test_oid_cache () {
+	local tag rest k v &&
+
+	{ test -n "$test_hash_algo" || test_detect_hash; } &&
+	while read tag rest
+	do
+		case $tag in
+		\#*)
+			continue;;
+		?*)
+			# non-empty
+			;;
+		*)
+			# blank line
+			continue;;
+		esac &&
+
+		k="${rest%:*}" &&
+		v="${rest#*:}" &&
+
+		if ! expr "$k" : '[a-z0-9][a-z0-9]*$' >/dev/null
+		then
+			BUG 'bad hash algorithm'
+		fi &&
+		eval "test_oid_${k}_$tag=\"\$v\""
+	done
+}
+
+# Look up a per-hash value based on a key ($1).  The value must have been loaded
+# by test_oid_init or test_oid_cache.
+test_oid () {
+	local var="test_oid_${test_hash_algo}_$1" &&
+
+	# If the variable is unset, we must be missing an entry for this
+	# key-hash pair, so exit with an error.
+	if eval "test -z \"\${$var+set}\""
+	then
+		BUG "undefined key '$1'"
+	fi &&
+	eval "printf '%s' \"\${$var}\""
+}
+
+# Choose a port number based on the test script's number and store it in
+# the given variable name, unless that variable already contains a number.
+test_set_port () {
+	local var=$1 port
+
+	if test $# -ne 1 || test -z "$var"
+	then
+		BUG "test_set_port requires a variable name"
+	fi
+
+	eval port=\$$var
+	case "$port" in
+	"")
+		# No port is set in the given env var, use the test
+		# number as port number instead.
+		# Remove not only the leading 't', but all leading zeros
+		# as well, so the arithmetic below won't (mis)interpret
+		# a test number like '0123' as an octal value.
+		port=${this_test#${this_test%%[1-9]*}}
+		if test "${port:-0}" -lt 1024
+		then
+			# root-only port, use a larger one instead.
+			port=$(($port + 10000))
+		fi
+		;;
+	*[!0-9]*|0*)
+		error >&7 "invalid port number: $port"
+		;;
+	*)
+		# The user has specified the port.
+		;;
+	esac
+
+	# Make sure that parallel '--stress' test jobs get different
+	# ports.
+	port=$(($port + ${GIT_TEST_STRESS_JOB_NR:-0}))
+	eval $var=$port
 }

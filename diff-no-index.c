@@ -82,7 +82,7 @@ static struct diff_filespec *noindex_filespec(const char *name, int mode)
 	if (!name)
 		name = "/dev/null";
 	s = alloc_filespec(name);
-	fill_filespec(s, null_sha1, 0, mode);
+	fill_filespec(s, &null_oid, 0, mode);
 	if (name == file_from_standard_input)
 		populate_from_stdin(s);
 	return s;
@@ -184,11 +184,9 @@ static int queue_diff(struct diff_options *o,
 	} else {
 		struct diff_filespec *d1, *d2;
 
-		if (DIFF_OPT_TST(o, REVERSE_DIFF)) {
-			unsigned tmp;
-			const char *tmp_c;
-			tmp = mode1; mode1 = mode2; mode2 = tmp;
-			tmp_c = name1; name1 = name2; name2 = tmp_c;
+		if (o->flags.reverse_diff) {
+			SWAP(mode1, mode2);
+			SWAP(name1, name2);
 		}
 
 		d1 = noindex_filespec(name1, mode1);
@@ -235,15 +233,20 @@ static void fixup_paths(const char **path, struct strbuf *replacement)
 	}
 }
 
-void diff_no_index(struct rev_info *revs,
+void diff_no_index(struct repository *r,
+		   struct rev_info *revs,
 		   int argc, const char **argv)
 {
-	int i, prefixlen;
+	int i;
 	const char *paths[2];
 	struct strbuf replacement = STRBUF_INIT;
 	const char *prefix = revs->prefix;
 
-	diff_setup(&revs->diffopt);
+	/*
+	 * FIXME: --no-index should not look at index and we should be
+	 * able to pass NULL repo. Maybe later.
+	 */
+	repo_diff_setup(r, &revs->diffopt);
 	for (i = 1; i < argc - 2; ) {
 		int j;
 		if (!strcmp(argv[i], "--no-index"))
@@ -259,7 +262,6 @@ void diff_no_index(struct rev_info *revs,
 		}
 	}
 
-	prefixlen = prefix ? strlen(prefix) : 0;
 	for (i = 0; i < 2; i++) {
 		const char *p = argv[argc - 2 + i];
 		if (!strcmp(p, "-"))
@@ -268,8 +270,8 @@ void diff_no_index(struct rev_info *revs,
 			 * path that is "-", spell it as "./-".
 			 */
 			p = file_from_standard_input;
-		else if (prefixlen)
-			p = xstrdup(prefix_filename(prefix, prefixlen, p));
+		else if (prefix)
+			p = prefix_filename(prefix, p);
 		paths[i] = p;
 	}
 
@@ -279,13 +281,16 @@ void diff_no_index(struct rev_info *revs,
 	if (!revs->diffopt.output_format)
 		revs->diffopt.output_format = DIFF_FORMAT_PATCH;
 
-	DIFF_OPT_SET(&revs->diffopt, NO_INDEX);
+	revs->diffopt.flags.no_index = 1;
+
+	revs->diffopt.flags.relative_name = 1;
+	revs->diffopt.prefix = prefix;
 
 	revs->max_count = -2;
 	diff_setup_done(&revs->diffopt);
 
 	setup_diff_pager(&revs->diffopt);
-	DIFF_OPT_SET(&revs->diffopt, EXIT_WITH_STATUS);
+	revs->diffopt.flags.exit_with_status = 1;
 
 	if (queue_diff(&revs->diffopt, paths[0], paths[1]))
 		exit(1);
