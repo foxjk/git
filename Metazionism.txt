@@ -1,0 +1,177 @@
+Skip to content
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
+git desktop
+Repositories1K
+Code8M
+Commits736K
+Issues64K
+Marketplace0
+Topics3
+Wikis14K
+Users13
+Languages
+267 HTML
+107 CSS
+94 JavaScript
+61 Java
+47 Python
+46 Shell
+31 C#
+28 C
+20 C++
+20 PHP
+Advanced search 
+git logo
+Git
+Git is the most widely used version control system.
+
+See topic
+1,813 repository results
+desktop/desktop
+Simple collaboration from your desktop
+typescript
+github-desktop
+electron
+github
+git
+MIT license
+
+Updated 3 hours ago
+
+120 issues need help
+ TypeScript
+ 6.8k
+manosim/gitify
+GitHub Notifications on your desktop.
+electron
+gitify
+github
+github-api
+electron-app
+react
+redux
+MIT license
+
+Updated 21 days ago
+
+ JavaScript
+ 2.6k
+BelledonneCommunications/linphone-desktop
+Linphone is a free VoIP and video softphone based on the SIP protocol. Mirror of git://git.linphone.org/linphone-desk…
+desktop
+linphone
+chat
+video
+conference
+sip
+phone
+message
+call
+voip
+GPL-2.0 license
+
+Updated on Jan 24
+
+ C++
+ 115
+jlord/git-it
+computer mortar_board Learn Git and GitHub. Try the new desktop version →
+Updated on Oct 11, 2018
+
+ HTML
+ 1.8k
+jlord/git-it-electron
+computer mortar_board Git-it is a (Mac, Win, Linux) Desktop App for Learning Git and GitHub
+BSD-2-Clause license
+
+Updated 23 hours ago
+
+ HTML
+ 2.8k
+donnemartin/gitsome
+A supercharged Git/GitHub command line interface (CLI). An official integration for GitHub and GitHub Enterprise: htt…
+python
+github-enterprise
+github
+git
+windows
+macos
+linux
+shell
+cli
+github-api
+client
+utility
+development
+programming
+terminal
+utilities
+command-line
+developer-tools
+cli-app
+github-client
+Updated 4 days ago
+
+19 issues need help
+ Python
+ 6.2k
+daemondevin/GitHubDesktopPortable
+A portable build of GitHub Desktop packaged in compliance with the PortableApps.com format specifications.
+github-desktop
+portableapps
+launcher
+portable
+paf
+MIT license
+
+Updated on Nov 28, 2018
+
+ Shell
+ 46
+demian85/git-watcher
+Git GUI desktop app that shows real-time diff file information for working directory and index
+javascript
+nodejs
+git
+nwjs
+MIT license
+
+Updated on Apr 8, 2015
+
+ JavaScript
+ 158
+jojobyte/githoard
+Desktop app that enables users to quickly clone git repositories
+electron
+vue
+git
+less
+vuex
+MIT license
+
+Updated on Jun 14, 2018
+
+ JavaScript
+ 90
+techwizrd/GitKraken
+A Git client for the GNOME Desktop.
+GPL-3.0 license
+
+Updated on Feb 14, 2016
+
+ Python
+ 36
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
