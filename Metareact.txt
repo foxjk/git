@@ -1,0 +1,3 @@
+metaadapt.txt
+
+https://github.com/oscarg933/git/tree/todo
