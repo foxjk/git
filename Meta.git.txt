@@ -1,0 +1,140 @@
+Skip to content
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
+git atom
+Repositories864
+Code4M
+Commits1M
+Issues30K
+Marketplace0
+Topics1
+Wikis3K
+Users6
+Languages
+202 HTML
+124 JavaScript
+86 CSS
+80 CoffeeScript
+45 Shell
+21 Python
+17 Ruby
+9 PHP
+8 Vim script
+7 Java
+Advanced search 
+git logo
+Git
+Git is the most widely used version control system.
+
+See topic
+864 repository results
+atom/github
+:octocat: Git and GitHub integration for Atom
+atom
+github
+git
+atom-package
+atom-editor
+MIT license
+
+Updated 7 hours ago
+
+1 issue needs help
+ JavaScript
+ 647
+jacogr/atom-git-control
+Provides a GUI interface to manage all commonly-used git commands.
+MIT license
+
+Updated on Sep 11, 2018
+
+3 issues need help
+ CoffeeScript
+ 226
+smashwilson/merge-conflicts Archived
+Resolve git merge conflicts in Atom
+conflict-resolution
+atom
+merge-conflicts
+MIT license
+
+Updated on May 16, 2017
+
+ CoffeeScript
+ 443
+akonwi/git-plus
+vim-fugitive like package for atom. make commits and other git things without the terminal
+MIT license
+
+Updated 5 days ago
+
+ CoffeeScript
+ 528
+diiq/atomatigit
+Atom-ati-Git. Git intergration for Atom.io, in the style of Magit. CURRENTLY SEEKING NEW MAINTAINER!
+MIT license
+
+Updated on Oct 30, 2017
+
+ CoffeeScript
+ 159
+atom/git-diff Archived
+Diff markers in Atom's gutter
+MIT license
+
+Updated on Sep 7, 2018
+
+ JavaScript
+ 107
+nikhilkalige/git-log
+A Atom package for git commit graphs
+MIT license
+
+Updated on Oct 25, 2017
+
+ JavaScript
+ 69
+alexcorre/git-blame
+Plugin for Atom Editor. Toggle git-blame annotations for the current file in the gutter.
+javascript
+atom
+atom-package
+MIT license
+
+Updated on Nov 7, 2018
+
+3 issues need help
+ JavaScript
+ 97
+atom/open-on-github
+Atom package for opening files on GitHub.com
+atom
+package
+MIT license
+
+Updated on Oct 2, 2018
+
+ JavaScript
+ 83
+samu/git-diff-details
+:atom: View git diffs directly in atom
+MIT license
+
+Updated on Oct 27, 2018
+
+2 issues need help
+ CoffeeScript
+ 28
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
