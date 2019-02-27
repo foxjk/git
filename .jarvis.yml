@@ -1,0 +1,163 @@
+Skip to content
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
+git repo
+Repositories86K
+Code15M+
+Commits25M+
+Issues482K
+Marketplace0
+Topics24
+Wikis60K
+Users225
+Languages
+3,213,174 XML
+3,184,513 Markdown
+992,532 HTML
+696,348 Text
+686,286 Python
+650,130 JSON
+639,541 Ruby
+553,151 Shell
+427,822 YAML
+305,805 PHP
+Advanced search 
+Showing 14,926,548 available code results 
+@nschexn
+nschexn/atom_editor – git-plus.coffee
+Showing the top eight matches Last indexed on Jul 5, 2018
+CoffeeScript
+    @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:menu', -> new GitPaletteView()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add', -> git.getRepo().then((repo) -> GitAdd(repo))
+    @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-all', -> git.getRepo().then((repo) -> GitAdd(repo, addAll: true))
+@lhangyu
+lhangyu/demo – apply.c
+Showing the top eight matches Last indexed on Oct 17, 2018
+C
+static git_signature *signature;
+static git_repository *repo;
+static git_index *repo_index;
+
+void test_stash_apply__initialize(void)
+{
+	git_oid oid;
+
+	repo = cl_git_sandbox_init_new("stash");
+	cl_git_pass(git_repository_index(&repo_index, repo));
+@lhangyu
+lhangyu/demo – repository.c
+Showing the top six matches Last indexed on Oct 17, 2018
+C
+#define GIT_FILE_CONTENT_PREFIX "gitdir:"
+
+#define GIT_BRANCH_MASTER "master"
+
+#define GIT_REPO_VERSION 0
+	{ DOT_GIT, 0, CONST_STRLEN(DOT_GIT) },
+};
+size_t git_repository__reserved_names_posix_len = 1;
+
+static void set_odb(git_repository *repo, git_odb *odb)
+@lhangyu
+lhangyu/demo – config.c
+Showing the top seven matches Last indexed on Oct 17, 2018
+C
+static git_buf path = GIT_BUF_INIT;
+
+void test_repo_config__initialize(void)
+{
+	cl_fixture_sandbox("empty_standard_repo");
+	cl_git_pass(cl_rename(
+		"empty_standard_repo/.gitted", "empty_standard_repo/.git"));
+@lhangyu
+lhangyu/demo – state.c
+Showing the top eight matches Last indexed on Oct 17, 2018
+C
+#include "fileops.h"
+
+static git_repository *_repo;
+static git_buf _path;
+
+void test_repo_state__initialize(void)
+{
+	_repo = cl_git_sandbox_init("testrepo.git");
+}
+
+void test_repo_state__cleanup(void)
+@j-tb
+j-tb/dotfiles – git-plus.js
+Showing the top five matches Last indexed on Jan 15
+JavaScript
+          'git-plus:add-modified': () => gitAddModified(),
+          'git-plus:commit': () => {
+            git.getRepo().then(repo => GitCommit(repo))
+          },
+          'git-plus:commit-all': () => {
+@jifukui
+jifukui/Study – t0410-partial-clone.sh
+Showing the top four matches Last indexed on Dec 13, 2018
+Shell
+	rm $1/.git/objects/$(echo $2 | sed -e 's|^..|&/|')
+}
+
+pack_as_from_promisor () {
+	HASH=$(git -C repo pack-objects .git/objects/pack/pack) &&
+	>repo/.git/objects/pack/pack-$HASH.promisor &&
+	echo $HASH
+@lhangyu
+lhangyu/demo – fetchlocal.c
+Showing the top six matches Last indexed on Oct 17, 2018
+C
+	int *callcount = (int*)payload;
+	GIT_UNUSED(stats);
+	(*callcount)++;
+	return 0;
+}
+
+static void cleanup_local_repo(void *path)
+void test_network_fetchlocal__cleanup(void)
+{
+	cl_git_sandbox_cleanup();
+}
+
+void test_network_fetchlocal__complete(void)
+{
+	git_repository *repo;
+	git_remote *origin;
+@lhangyu
+lhangyu/demo – soft.c
+Showing the top eight matches Last indexed on Oct 17, 2018
+C
+#include "repo/repo_helpers.h"
+
+static git_repository *repo;
+static git_object *target;
+
+void test_reset_soft__initialize(void)
+{
+	repo = cl_git_sandbox_init("testrepo.git");
+}
+
+void test_reset_soft__cleanup(void)
+@sanata-
+sanata-/dotenv – git-plus.coffee
+Showing the top 10 matches Last indexed on Jul 2, 2018
+CoffeeScript
+GitMerge               = require './models/git-merge'
+GitRebase              = require './models/git-rebase'
+
+currentFile = (repo) ->
+    @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add', -> git.getRepo().then((repo) -> GitAdd(repo))
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
