@@ -1,0 +1,145 @@
+Skip to content
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
+picasso cd
+Repositories0
+Code137K
+Commits25
+Issues45
+Marketplace0
+Topics0
+Wikis12
+Users0
+Languages
+40,070 C
+34,900 Text
+3,106 CSV
+2,648 HTML
+1,934 XML
+1,915 JSON
+1,307 Java
+755 Jupyter Notebook
+571 Markdown
+287 Fortran
+Advanced search 
+137,439 code results
+@YanShaoY
+YanShaoY/JxProduct – LoginDataResponse.java
+Showing the top two matches Last indexed on Sep 13, 2018
+Java
+     * collection : [{"head_photo_url":"http://oss-cn-qingdao.aliyuncs.com/picasso-dev/default_head.png","hotel_code":"","hotel_pay_end_date":"","identification_number":"7768776677","links":[{"rel":"dosser/destroy/session","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f.json","title":"移动端-登出"},{"rel":"dosser/create/password","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/passwords/~","title":"移动端-直接修改密码"},{"rel":"dosser/get/session","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f.json","title":"移动端-获取session"},{"rel":"dosser/load/app_configuration","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/app_configurations.json","title":"移动端-获得app配置"},{"rel":"dosser/load/oss_secret","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/oss_secrets.json","title":"移动端-获得oss配置"},{"rel":"dosser/load/tracking_profile","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/tracking_profiles.json","title":"移动端-查询位置跟踪策略"},{"rel":"dosser/load/badge","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/badges.json","title":"移动端-查询电子工牌"},{"rel":"dosser/load/re_use_identity_card","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/re_use_identity_cards.json","title":"移动端-身份证复用查询"},{"rel":"dosser/create/alarm","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/alarms.json","title":"移动端-新增报警"},{"rel":"dosser/load/message","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/messages.json","title":"移动端-查询消息"},{"rel":"dosser/show/message_class","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/message_classes.json","title":"移动端-查询通知通告类型"},{"rel":"webview/show/message","href":"http://zdht-cd.imwork.net:5432/picasso-lan-web-source/public/assets/governance/v1/message_details_app_show.html?id={id}&session_id=0d6c7620-f23f-426d-980e-98e68d4a769f","title":"移动端-webview消息详情"},{"rel":"dosser/create/message_reading","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/messages/{id}/readings.json","title":"移动端-签收消息"},{"rel":"dosser/create/position_trackings","href":"http://zdht-cd.imwork.net:5432/roraima-wan/practitioner-api/v1/practitioner/0d6c7620-f23f-426d-980e-98e68d4a769f/position_trackings.json","title":"上传位置跟踪"},{"rel":"dosser/load/beacons","href":"http://zdht-cd.imwork.net:5432/roraima-wan/practitioner-api/v1/practitioner/0d6c7620-f23f-426d-980e-98e68d4a769f/beacons.json","title":"查询室内定位信标的相对位置"},{"rel":"dosser/index/app_info","href":"http://zdht-cd.imwork.net:5432/picasso-wan/governance-api/v1/app_packages.json","title":"web端-查询app信息"},{"rel":"dosser/create/app_info","href":"http://zdht-cd.imwork.net:5432/picasso-wan/governance-api/v1/app_packages.json","title":"web端-新建app信息"},{"rel":"dosser/create/release","href":"http://zdht-cd.imwork.net:5432/picasso-wan/governance-api/v1/releases.json","title":"web端-新增版本信息"},{"rel":"dosser/index/app_skin","href":"http://zdht-cd.imwork.net:5432/picasso-wan/governance-api/v1/app_skins.json","title":"web端-查询皮肤信息"},{"rel":"dosser/index/app_advertisement","href":"http://zdht-cd.imwork.net:5432/picasso-wan/governance-api/v1/app_advertisements.json","title":"web端-查询广告信息"},{"rel":"dosser/index/release","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/releases.json","title":"移动端-查询新版本信息"},{"rel":"dosser/index/app_skin","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/app_skins.json","title":"移动端-查询皮肤信息"},{"rel":"dosser/index/app_advertisement","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/app_advertisements.json","title":"移动端-查询广告信息"},{"rel":"dosser/load/messages_legacy","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/messages.json","title":"移动端-查询消息（一体机使用）"},{"rel":"dosser/index/friend","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/friends.json","title":"移动端-查询好友"},{"rel":"dosser/index/entity_attribute_defines","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/entity_attribute_defines.json","title":"查询扩展数据字段"},{"rel":"dosser/index/sys_dict_displays","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/sys_dict_displays.json","title":"查询字典展示"},{"rel":"dosser/create/vehicle_maintenances","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/vehicle_maintenances.json","title":"新增登记"},{"rel":"dosser/load/vehicle_maintenances","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/vehicle_maintenances.json","title":"历史业务查询"},{"rel":"dosser/show/vehicle_maintenance_infos","href":"http://zdht-cd.imwork.net:5432/picasso-wan/practitioner-api/v1/sessions/0d6c7620-f23f-426d-980e-98e68d4a769f/vehicle_maintenance_infos/{maintenanceId}.json","title":"历史业务详情"}],"name":"李二","phone_number":"14258585201","place_id":"","place_name":"test机动车维修业","practitioner_id":"08b009fc-0e01-4979-b2e8-a15a63d8d6eb","session_id":"0d6c7620-f23f-426d-980e-98e68d4a769f","sex":"男","tencent_im_sign":"eJxlj01TgzAURff8Coatoi98Ju7UtkhtUQSt7YYhJNhMKQUaq*D431XsjMy4Pufde9*HoqqqFs*iszTLdq*lTGRbcU29UDXQTv9gVQmWpDIxG-YP8vdKNDxJc8mbHiLbtg2AoSMYL6XIxdEATAFInunAAekWcYlODY71FNmpYzLMHE4H13u2SfoJv-HWdzZg07GGinjp4Xy8vPbD0eakg0M7Qef3Bho56zr33ooid-gqoOChKIjvFjhYtUU9Cf31ZTCzb8ZV7YXzJ1qlsdEdyIK0bReQZ-dxG-lTuWR0eiVu5cOgUootP-5rOhhhF6MBPfBmL3ZlLxiAbGQA*dmtKZ-KF83GZIg_"}]
+@jasonge27
+jasonge27/picasso – Makefile
+Showing the top three matches Last indexed 9 days ago
+Makefile
+	cp ${PICASSO_DYLIB} python-package/pycasso
+	cd python-package; tar cf pycasso.tar pycasso; tar rf pycasso.tar data; cd ..
+
+# install python-package
+Pyinstall: ${PICASSO_DYLIB}
+	rm -rf python-package/pycasso/lib/
+@Ali24R9
+Ali24R9/album-organizer – cd_organizer_spec.rb
+Showing the top eight matches Last indexed on Jun 28, 2018
+Ruby
+  it 'initializes a CD with an album name and artist name' do
+    test_cd = CD.new({:artist => 'picasso', :album => 'photo album'})
+    it 'should be empty at first' do
+      new_cd = CD.new({:artist => 'picasso', :album => 'photo album'})
+      CD.all.should eq []
+@Three-DS
+Three-DS/Radio-Freedom – Makefile.in
+Showing the top match Last indexed on Jul 3, 2018
+Makefile
+pkgincludedir = $(includedir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkglibexecdir = $(libexecdir)/@PACKAGE@
+am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
+install_sh_DATA = $(install_sh) -c -m 644
+install_sh_PROGRAM = $(install_sh) -c
+@Three-DS
+Three-DS/Radio-Freedom – Makefile.in
+Showing the top match Last indexed on Jul 3, 2018
+Makefile
+pkglibdir = $(libdir)/@PACKAGE@
+pkglibexecdir = $(libexecdir)/@PACKAGE@
+am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
+install_sh_DATA = $(install_sh) -c -m 644
+install_sh_PROGRAM = $(install_sh) -c
+@GraphicsEmpire
+GraphicsEmpire/raytracer – Makefile
+Showing the top five matches Last indexed on Jul 8, 2018
+Makefile
+all: cmake_check_build_system
+	cd /proj/picasso/pourya/repos/raytracer && $(CMAKE_COMMAND) -E cmake_progress_start /proj/picasso/pourya/repos/raytracer/CMakeFiles /proj/picasso/pourya/repos/raytracer/src/3rdparty/yaml-cpp/CMakeFiles/progress.marks
+	cd /proj/picasso/pourya/repos/raytracer && $(MAKE) -f CMakeFiles/Makefile2 src/3rdparty/yaml-cpp/all
+@L1maginaire
+L1maginaire/Square – ContributorsAdapter.java
+Showing the top four matches Last indexed on Jul 13, 2018
+Java
+import com.example.square.ui.BrowserActivity;
+import com.squareup.picasso.Picasso;
+
+import java.util.List;
+
+import butterknife.BindView;
+        holder.contributionsCount.setText(String.valueOf(cd.getContributions()));
+        picasso.load(cd.getAvatarUrl()).into(holder.avatar);
+@Alhadis
+Alhadis/Research-Unix-v10 – makefile
+Showing the top five matches Last indexed 3 days ago
+Makefile
+		$(INS) picasso $(INSDIR); \
+		$(INS) picasso.ps $(POSTLIB); \
+		$(INS) fonts.ps $(POSTLIB); \
+		cd $(INSDIR); chmod 755 picasso ; \
+		cd $(POSTLIB); chmod 744 fonts.ps picasso.ps; \
+		echo "++  picasso  INSTALLED" ; \
+@rajakamraj
+rajakamraj/Election-Predictive-analysis – NYT-20150205-picassos-granddaughter-plans_expected_tag_results.txt
+Showing the top four matches Last indexed on Jul 3, 2018
+Text
+      "2001",
+      "CD"
+    ],
+    [
+      "memoir",
+      "NN"
+    ],
+    [
+      "Picasso",
+      "NNP"
+      "RB"
+    ],
+    [
+      "64",
+      "CD"
+    ],
+    [
+      "Ms",
+      "NNP"
+    ],
+    [
+      "Picasso",
+@akwilliamson
+akwilliamson/CD-Organizer – cd_organizer_spec.rb
+Showing the top eight matches Last indexed on Jun 28, 2018
+Ruby
+  it 'initializes a CD with an album name and artist name' do
+    test_cd = CD.new({:artist => 'picasso', :album => 'photo album'})
+    it 'should be empty at first' do
+      new_cd = CD.new({:artist => 'picasso', :album => 'photo album'})
+      CD.all.should eq []
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
