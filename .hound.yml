@@ -1,0 +1,86 @@
+Skip to content
+Your account has been flagged.
+Because of that, your profile is hidden from the public. If you believe this is a mistake, contact support to have your account status reviewed.
+amd hasher
+Repositories9
+Code124K
+Commits425K
+Issues43
+Marketplace0
+Topics0
+Wikis1
+Users0
+Languages
+1 PowerShell
+1 Python
+1 TypeScript
+Advanced search 
+9 repository results
+zbobyuan/JJ-s-XMR-STAK-HashRate-Monitor-and-Restart-Tool
+Powershell script to manage the hash rate drop some people are experiencing with AMD Vega and XMR-STAK
+LGPL-3.0 license
+
+Updated on Aug 22, 2018
+
+ PowerShell
+ 12
+scottishtitan/amd-not-registering-on-nice-hash
+amd won't register with nice hash legacy
+Updated on Dec 21, 2017
+
+dmkuznetsov/requirejs-hash-vars Archived
+AMD loader plugin for simple work with url hash
+Updated on Apr 26, 2013
+
+ 1
+degconnect/deg_flasher
+Tool for flashing AMD RX cards so miner can mine at better hashing power.
+flash
+ethos
+modding
+amd
+mining
+rx
+ethereum-mining
+Updated on Apr 17, 2018
+
+ Python
+ 1
+baneej/Mining-request
+please write me i need any hash what i can get !! i will send you miner.exe and code for the .bat file write me pn i…
+Updated on Jun 9, 2017
+
+ 1
+gentwolf-shen/web-front-demo
+一个简单的WEB前端构建框架，基于gulp。可编译typescript、less，使用tmod编译arttemplate模板，实现html的layout功能，添加css/js引用hash等，AMD(requirejs)加载合并等。
+Updated on Oct 12, 2017
+
+ TypeScript
+ 1
+thewebdeveloper2017/ilearnmacquarie20178
+>document.getElementById('anchor').value = location.hash</script> <input type="submit" id="loginbtn" value="Log in" /…
+Updated on Mar 3, 2017
+
+ 1
+6531076392/nuevo
+)&&1===t.nodeType);return!1}}),target:function(t){var n=e.location&&e.location.hash;return n&&n.slice(1)===t.id},root…
+Updated 4 days ago
+
+alinama79/ali12
+&&e.location.hash;return n&&n.slice(1)===t.id},root:function(e){return e===d},focus:function(e){return e===f.activeEl…
+Updated on Oct 10, 2017
+
+ 1
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
+Press h to open a hovercard with more details.
